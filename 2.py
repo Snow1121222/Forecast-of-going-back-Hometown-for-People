@@ -11,7 +11,6 @@ Created on Wed Oct  5 23:01:17 2022
     通话类特征：基于联通用户日常通话、短信产生的数据
 解题基本思路：对提供的特征进行探索后，选取合适的特征构建模型，最后进行二分类预测，主要是从数据清洗、特征构造和筛选以及模型融合的思路
 注意：数据集中有一定比例的噪声，需要参赛选手甄别
-
 该代码主要通过构造位置类和通话类数据（主要处理这两类数据）的特征进行训练预测，互联网数据并没有特意进行特征构造
 """
 import numpy as np
@@ -50,6 +49,11 @@ data_NoLabel = pd.read_csv('./datas/dataNoLabel.csv')
 ''' 
 ======================二、特征构造（自己定义）===================================
 '''
+#特征组合:f1,f2是位置类特征且由0,1组成，更方便一些，所以选这两列进行特征组合，f47=100*f1+f2
+#f47不放在最后的原因，一它并没有和其它列进行加减乘除，只是单列；二越往后面特征重要性占比越大，
+#三特征筛选后auc很难得到提高
+train_data['f47'] = train_data['f1'] * 100 + train_data['f2']  
+test_data['f47'] = test_data['f1'] * 100 + test_data['f2']
 #特征衍生:遍历位置类特征(f3列非数字且是互联网类特征)
 #过程：分别遍历训练集和测试集的位置类特征并返回对应集合中，如遍历训练集的f1，df存入i和i+1行进行四则运算的结果
 loc_f = ['f1', 'f2', 'f4', 'f5', 'f6']
@@ -69,35 +73,6 @@ for df in [train_data, test_data]:
             df[f'{com_f[i]}-{com_f[j]}'] = df[com_f[i]] - df[com_f[j]]
             df[f'{com_f[i]}*{com_f[j]}'] = df[com_f[i]] * df[com_f[j]]
             df[f'{com_f[i]}/{com_f[j]}'] = df[com_f[i]] / (df[com_f[j]]+1)
-
-# 特征离散化 位置类特征           
-loc_f2 = [f'f{idx}' for idx in range(1, 7) if idx != 3]
-for df in [train_data, test_data]:
-    for col in loc_f2:
-        df[f'{col}_log'] = df[col].apply(lambda x: int(np.log(x)) if x > 0 else 0)
-
-# 特征交叉 位置类特征       
-log_f = [f'f{idx}_log' for idx in range(1, 7) if idx != 3]
-for df in [train_data, test_data]:
-    for i in range(len(log_f)):
-        for j in range(i + 1, len(log_f)):
-            df[f'{log_f[i]}_{log_f[j]}'] = df[log_f[i]]*100 + df[log_f[j]]
-
-# 特征离散化   通话类特征         
-com_f2 = [f'f{idx}' for idx in range(43, 47)]
-for df in [train_data, test_data]:
-    for col in com_f2:
-        df[f'{col}_log'] = df[col].apply(lambda x: int(np.log(x)) if x > 0 else 0)
-
-# 特征交叉  通话类特征      
-log_f = [f'f{idx}_log' for idx in range(43, 47)]
-for df in [train_data, test_data]:
-    for i in range(len(log_f)):
-        for j in range(i + 1, len(log_f)):
-            df[f'{log_f[i]}_{log_f[j]}'] = df[log_f[i]]*100 + df[log_f[j]]       
-#特征组合:f1,f2是位置类特征且由0,1组成，更方便一些，所以选这两列进行特征组合，f47=100*f1+f2
-train_data['f47'] = train_data['f1'] * 100 + train_data['f2']  
-test_data['f47'] = test_data['f1'] * 100 + test_data['f2']
 '''
 =======================三、f3数值化后，构造出训练集和测试集=======================
 '''
@@ -252,4 +227,4 @@ for i in range(len(scf_train_preds)):
         last_pred[i]=0
 '''
 submission['label'] = scf_train_preds #model_train返回值是返乡的概率
-submission.to_csv('./datas/submission.csv', index=False)#将结果存到这个数据文档中 aasa
+submission.to_csv('./datas/submission.csv', index=False)#将结果存到这个数据文档中
