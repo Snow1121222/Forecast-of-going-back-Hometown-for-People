@@ -252,4 +252,4 @@ for i in range(len(scf_train_preds)):
         last_pred[i]=0
 '''
 submission['label'] = scf_train_preds #model_train返回值是返乡的概率
-submission.to_csv('./datas/submission.csv', index=False)#将结果存到这个数据文档中
+submission.to_csv('./datas/submission.csv', index=False)#将结果存到这个数据文档中 aasa
