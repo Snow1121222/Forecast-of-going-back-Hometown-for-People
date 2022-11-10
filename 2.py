@@ -23,10 +23,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import GradientBoostingClassifier
 #xgboost每次迭代建立新树，但需要先对数据进行优化处理
 from xgboost import XGBClassifier 
-#lightgbm是优化xgboost，他支持并行
-from lightgbm import LGBMClassifier
-#catboost处理类别型特征的梯度提升算法，解决梯度偏差、预测偏移的问题，从而减少过拟合
-from catboost import CatBoostClassifier
 #stacking可以将多种分类模型集合，模型融合
 from sklearn.ensemble import StackingClassifier
 #交叉验证：数据集分成训练集和测试集，训练集对分类器进行训练，测试集验证。
@@ -129,27 +125,7 @@ xgbc = XGBClassifier(#回归预测
     n_estimators=100, #总共迭代的次数，即决策树的个数,要执行的提升次数
     max_depth=7 #它限制了树中结点的数量。树的深度,这个值也是用来避免过拟合的。越大，模型会学到更具体更局部的样本，越容易过拟合；值越小，越容易欠拟合
 )
-lgbm = LGBMClassifier(
-    objective='binary',#任务类型
-    boosting_type='gbdt',#梯度提升决策树的类型，
-    metrics='auc',#模型度量标准
-    num_leaves=2 ** 6, #数的最大叶子数，用于控制模型复杂度即它的值的设置应该小于2^(max_depth)，否则会进行警告，可能会导致过拟合。
-    max_depth=8,#每个弱学习器也就是决策树的最大深度
-    learning_rate=0.05, 
-    n_estimators=100, #训练轮数（拟合的树的棵树），弱学习器的个数，其中gbdt原理是利用通过梯度不断拟合新的弱学习器，直到达到设定的弱学习器的数量。
-    colsample_bytree=0.8,#训练特征采样率，列
-    subsample_freq=1,#子样本频率
-    max_bin=255#分桶数   
-)
-cbc = CatBoostClassifier(
-    loss_function='Logloss', #损失函数
-    iterations=210, #最大树数
-    depth=10, 
-    learning_rate=0.03, 
-    l2_leaf_reg=1, #正则参数
-    verbose=0#显示日志，0就是什么也不显示
-)
-estimate_models = [('gbc', gbc) , ('xgbc', xgbc) , ('lgbm', lgbm) , ('cbc', cbc)]   
+estimate_models = [('gbc', gbc) , ('xgbc', xgbc)]   
 scf = StackingClassifier(#模式融合
     estimators=estimate_models, #先用上面的模型进行迭代训练：第一层
     final_estimator=LogisticRegression()#第二层进行逻辑回归训练
